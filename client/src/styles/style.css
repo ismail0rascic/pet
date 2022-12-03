@@ -1,0 +1,41 @@
+.box {
+    --size: 50px;
+    --p: 25px;
+    --R: 55.9px
+        /*sqrt(var(--size)*var(--size) + var(--p)*var(--p))*/
+    ;
+
+    height: 200px;
+
+    -webkit-mask:
+        radial-gradient(var(--R) at 50% calc(100% - (var(--size) + var(--p))), #C4834D 99%, #0000 101%) calc(50% - 2*var(--size)) 0/calc(4*var(--size)) 100%,
+        radial-gradient(var(--R) at 50% calc(100% + var(--p)), #0000 99%, #C4834D 101%) 50% calc(100% - var(--size))/calc(4*var(--size)) 100% repeat-x;
+    background: linear-gradient(90deg, #C4834D, #C4834D);
+    border: none;
+
+}
+
+.boxCover {
+    --size: 50px;
+    --p: 25px;
+    --R: 55.9px /*sqrt(var(--size)*var(--size) + var(--p)*var(--p))*/;
+    height: 200px;
+    margin: 10px 0;
+    -webkit-mask:
+      radial-gradient(var(--R) at left 50% var(--d,top) calc(var(--size) + var(--p)),#000 99%,#0000 101%)
+        calc(50% - 2*var(--size)) 0/calc(4*var(--size)) 100%,
+      radial-gradient(var(--R) at left 50% var(--d,top) calc(-1*var(--p)),#0000 99%,#000 101%)
+        left 50% var(--d,top) var(--size)/calc(4*var(--size)) 100% repeat-x;
+    background:#C4834D;
+    border: none;
+  }
+  p{
+      color:#A3653C;
+  }
+  .pulse {
+    animation: pulse 1s infinite ease-in-out alternate;
+  }
+  @keyframes pulse {
+    from { transform: scale(0.8); }
+    to { transform: scale(1); }
+  }
