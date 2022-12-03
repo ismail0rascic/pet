@@ -1,6 +1,6 @@
 import validator from "validator";
 import isEmpty from "is-empty";
-export default function validateSignInput(data) {
+export default function validateSignIn(data) {
   let errors = {};
   data.email = !isEmpty(data.email) ? data.email : "";
   data.password = !isEmpty(data.password) ? data.password : "";

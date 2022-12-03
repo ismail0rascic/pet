@@ -3,10 +3,53 @@ import jwt from "jsonwebtoken";
 import { expressjwt } from "express-jwt";
 import config from "../config/config.js";
 import bcrypt from "bcryptjs";
-import validateSignInput from "../validation/signin.validation.js";
+import validateSignIn from "../validation/signin.validation.js";
+import validateSignUp from "../validation/signup.validation.js";
+
+export const signUp = (req, res) => {
+  const { errors, isValid } = validateSignUp(req.body);
+
+  if (!isValid) {
+    return res.status(400).json(errors);
+  }
+  User.findOne({ email: req.body.email }).then((user) => {
+    if (user) {
+      return res.status(400).json({ email: "Email already exists" });
+    } else {
+      User.findOne({ name: req.body.name }).then((user) => {
+        if (user) {
+          return res.status(400).json({ name: "Name already exists" });
+        } else {
+          const newUser = new User({
+            name: req.body.name,
+            surname: req.body.surname,
+            email: req.body.email,
+            contact: req.body.contact,
+            city: req.body.city,
+            address: req.body.address,
+            password: req.body.password,
+          });
+
+          bcrypt.genSalt(10, (err, salt) => {
+            bcrypt.hash(newUser.password, salt, (err, hash) => {
+              if (err) throw err;
+              newUser.password = hash;
+              newUser
+                .save()
+                .then((user) => {
+                  res.json(user);
+                })
+                .catch((err) => console.log(err));
+            });
+          });
+        }
+      });
+    }
+  });
+};
 
 const signIn = (req, res) => {
-  const { errors, isValid } = validateSignInput(req.body);
+  const { errors, isValid } = validateSignIn(req.body);
   if (!isValid) {
     return res.status(400).json(errors);
   }
@@ -17,12 +60,24 @@ const signIn = (req, res) => {
     }
     bcrypt.compare(req.body.password, user.password).then((isMatch) => {
       if (isMatch) {
-        const token = jwt.sign({ _id: user._id }, config.SECRET_KEY);
-        res.cookie("token", token, { expire: new Date() + 999 });
-        res.status(200).json({
-          token,
-          user: { _id: user._id, name: user.name, email: user.email },
-        });
+        const payload = {
+          id: user.id,
+          name: user.name,
+        };
+        jwt.sign(
+          payload,
+          config.SECRET_KEY,
+          {
+            expiresIn: 31556926,
+          },
+          (err, token) => {
+            res.cookie("token", token, { httpOnly: true });
+            res.json({
+              success: true,
+              token: token,
+            });
+          }
+        );
       } else {
         return res.status(401).json({ password: "wrong password" });
       }
@@ -34,15 +89,5 @@ const signOut = (req, res) => {
   res.clearCookie("token");
   res.status(200).json({ message: "User signed out." });
 };
-const requireSignIn = expressjwt({
-  secret: config.SECRET_KEY,
-  algorithms: ["HS256"],
-  userProperty: "auth",
-});
-const hasAuthorization = (req, res, next) => {
-  const authorized = req.body && req.auth && req.body.id == req.auth._id;
-  if (!authorized) return res.status(403).json("User is not authorized!");
-  next();
-};
 
-export { signIn, signOut, requireSignIn, hasAuthorization };
+export { signIn, signOut };
